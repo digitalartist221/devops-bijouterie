@@ -1,0 +1,22 @@
+# Application GitOps surveillee par Argo CD.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bijouterie
+  namespace: argocd
+spec:
+  project: default
+  source:
+    # A remplacer par l'adresse du depot Git de l'etudiant.
+    repoURL: https://github.com/votre-utilisateur/bijouterie-microservices.git
+    targetRevision: main
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bijouterie
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
