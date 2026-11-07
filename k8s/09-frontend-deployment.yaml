@@ -1,0 +1,50 @@
+# Le frontend Nginx sert le site et transmet /api au backend.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: bijouterie
+  labels:
+    app: bijouterie
+    tier: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bijouterie
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: bijouterie
+        tier: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: votre-user-dockerhub/bijouterie-frontend:1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: frontend-config
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10

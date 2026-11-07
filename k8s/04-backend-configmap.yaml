@@ -1,0 +1,17 @@
+# Configuration non sensible de l'API.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: bijouterie
+  labels:
+    app: bijouterie
+    tier: backend
+data:
+  PORT: "3000"
+  DB_HOST: mysql
+  DB_PORT: "3306"
+  DB_NAME: bijouterie
+  SHOP_NAME: Maison Amina
+  CURRENCY: XOF
+  MAX_FILE_SIZE_MB: "5"

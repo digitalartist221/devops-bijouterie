@@ -1,0 +1,8 @@
+# Le namespace regroupe toutes les ressources de la bijouterie.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bijouterie
+  labels:
+    app: bijouterie
+# Un Namespace est une ressource globale : il ne peut pas avoir metadata.namespace.

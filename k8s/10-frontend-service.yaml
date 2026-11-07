@@ -1,0 +1,19 @@
+# Seul le frontend est accessible depuis l'exterieur du cluster.
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: bijouterie
+  labels:
+    app: bijouterie
+    tier: frontend
+spec:
+  type: NodePort
+  selector:
+    app: bijouterie
+    tier: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      nodePort: 30080

@@ -1,0 +1,10 @@
+# Surcharge locale utile si le port MySQL 3307 est deja utilise.
+# Elle ne change rien aux ports internes entre les conteneurs.
+services:
+  mysql:
+    ports: !override
+      - "3308:3306"
+
+  frontend:
+    ports: !override
+      - "8082:80"
