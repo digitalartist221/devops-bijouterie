@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: digitalartistsn/bijouterie-backend:1
+          image: digitalartistsn/bijouterie-backend:2
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: mysql
-          image: digitalartistsn/bijouterie-mysql:1
+          image: digitalartistsn/bijouterie-mysql:2
           imagePullPolicy: IfNotPresent
           ports:
             - name: mysql
