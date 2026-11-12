@@ -1,5 +1,7 @@
 # Bijouterie — application microservices (CRUD bijoux en or)
 
+Les commandes Kubernetes, Jenkins et Argo CD sont expliquees dans [README-TP.md](README-TP.md).
+
 Petite boutique en ligne de bijoux en or : catalogue, ajout, modification,
 suppression de bijoux, avec **photo** pour chaque bijou.
 

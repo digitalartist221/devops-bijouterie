@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // A remplacer une seule fois par le nom du compte Docker Hub.
-        DOCKERHUB_USER = 'votre-user-dockerhub'
+        DOCKERHUB_USER = 'digitalartistsn'
         FRONTEND_IMAGE = "${DOCKERHUB_USER}/bijouterie-frontend"
         BACKEND_IMAGE = "${DOCKERHUB_USER}/bijouterie-backend"
         MYSQL_IMAGE = "${DOCKERHUB_USER}/bijouterie-mysql"

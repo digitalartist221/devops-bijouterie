@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: votre-user-dockerhub/bijouterie-backend:1
+          image: digitalartistsn/bijouterie-backend:1
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

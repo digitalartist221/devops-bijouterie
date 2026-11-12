@@ -7,8 +7,7 @@ metadata:
 spec:
   project: default
   source:
-    # A remplacer par l'adresse du depot Git de l'etudiant.
-    repoURL: https://github.com/votre-utilisateur/bijouterie-microservices.git
+    repoURL: https://github.com/digitalartist221/devops-bijouterie.git
     targetRevision: main
     path: k8s
   destination:

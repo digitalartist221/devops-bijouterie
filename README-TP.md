@@ -1,37 +1,36 @@
 # TP Kubernetes - Bijouterie
 
-Ce fichier donne l'ordre des operations. Le code de l'application fourni n'a pas ete modifie.
+Application microservices composee d'un frontend Nginx, d'une API Node.js et d'une base MySQL.
 
-## 1. Valeurs personnelles a remplacer
+- Depot GitHub : https://github.com/digitalartist221/devops-bijouterie
+- Images Docker : https://hub.docker.com/repositories/digitalartistsn
 
-Avant de publier le depot :
-
-- remplacer `votre-user-dockerhub` dans le `Jenkinsfile` et les trois Deployments ;
-- remplacer `repoURL` dans `argocd/application.yaml` ;
-- choisir d'autres mots de passe, les encoder en base64 puis remplacer les valeurs dans les deux Secrets ;
-- mettre les memes identifiants dans `mysql-secret` et `backend-secret`.
-
-## 2. Test avec Docker Compose
+## Test avec Docker Compose
 
 ```bash
 docker compose up --build -d
 docker compose ps
 curl http://localhost:8080/api/config
+```
+
+Pour arreter l'application :
+
+```bash
 docker compose down
 ```
 
-## 3. Test Kubernetes avec kind
+## Test Kubernetes avec kind
 
 ```bash
 kind create cluster --name bijouterie --config kind-config.yaml
 
-docker build -t votre-user-dockerhub/bijouterie-frontend:1 frontend/
-docker build -t votre-user-dockerhub/bijouterie-backend:1 backend/
-docker build -t votre-user-dockerhub/bijouterie-mysql:1 database/
+docker build -t digitalartistsn/bijouterie-frontend:1 frontend/
+docker build -t digitalartistsn/bijouterie-backend:1 backend/
+docker build -t digitalartistsn/bijouterie-mysql:1 database/
 
-kind load docker-image votre-user-dockerhub/bijouterie-frontend:1 --name bijouterie
-kind load docker-image votre-user-dockerhub/bijouterie-backend:1 --name bijouterie
-kind load docker-image votre-user-dockerhub/bijouterie-mysql:1 --name bijouterie
+kind load docker-image digitalartistsn/bijouterie-frontend:1 --name bijouterie
+kind load docker-image digitalartistsn/bijouterie-backend:1 --name bijouterie
+kind load docker-image digitalartistsn/bijouterie-mysql:1 --name bijouterie
 
 kubectl apply -f k8s/
 kubectl get all -n bijouterie
@@ -40,26 +39,74 @@ kubectl get endpoints -n bijouterie
 curl http://localhost:30080/api/config
 ```
 
-Apres la verification locale, Argo CD devient la seule source de verite. Il ne faut alors plus utiliser `kubectl apply` dans le namespace `bijouterie`.
+## Jenkins
 
-## 4. Jenkins
+1. Creer un Access Token sur Docker Hub.
+2. Dans Jenkins, ouvrir **Manage Jenkins > Credentials**.
+3. Ajouter un credential **Username with password** :
+   - Username : `digitalartistsn`
+   - Password : le token Docker Hub
+   - ID : `dockerhub-credentials`
+4. Creer un job **Pipeline** avec **Pipeline script from SCM**.
+5. Choisir Git et utiliser `https://github.com/digitalartist221/devops-bijouterie.git`.
+6. Indiquer `Jenkinsfile` comme chemin du script, puis lancer le build.
 
-1. Creer les trois depots publics sur Docker Hub.
-2. Ajouter dans Jenkins un credential `Username with password` nomme `dockerhub-credentials`. Le password est le token Docker Hub.
-3. Creer un job `Pipeline script from SCM`, indiquer le depot Git et `Jenkinsfile`.
-4. Lancer le job et noter le numero du build.
-5. Remplacer le tag `:1` des trois Deployments par ce numero, puis pousser le commit.
+Le pipeline construit et publie les trois images avec le numero du build et le tag `latest`. Les manifests Kubernetes utilisent un numero de build explicite.
 
-## 5. Argo CD
+## Installer Argo CD
 
-Une fois Argo CD installe dans son namespace :
+Verifier d'abord que `kubectl` utilise le bon cluster :
+
+```bash
+kubectl config current-context
+```
+
+Installer Argo CD dans son namespace :
+
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl wait --for=condition=Available deployment --all -n argocd --timeout=300s
+kubectl get pods -n argocd
+```
+
+## Ouvrir Argo CD
+
+Dans un terminal, lancer :
+
+```bash
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+```
+
+Ouvrir ensuite https://localhost:8080. Le certificat est auto-signe, le navigateur peut afficher un avertissement.
+
+Le nom d'utilisateur est `admin`. Pour obtenir le mot de passe initial :
+
+```bash
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+echo
+```
+
+## Configurer l'application Argo CD
+
+Le depot GitHub est public. Il n'est donc pas necessaire d'ajouter un token GitHub dans Argo CD.
 
 ```bash
 kubectl apply -f argocd/application.yaml
+kubectl get applications -n argocd
+kubectl describe application bijouterie -n argocd
 ```
 
-L'application doit devenir `Synced` et `Healthy`. Les options `prune` et `selfHeal` sont activees dans le fichier.
+Dans l'interface Argo CD, l'application `bijouterie` doit passer a **Synced** et **Healthy**. Elle surveille la branche `main`, le dossier `k8s` et deploie dans le namespace `bijouterie`.
 
-## 6. Secrets en production
+La synchronisation automatique est activee avec :
 
-Le base64 n'est pas du chiffrement. Une personne qui lit le depot peut retrouver les mots de passe. En production, on peut utiliser Sealed Secrets, External Secrets Operator ou un gestionnaire comme HashiCorp Vault. Il faut aussi changer regulierement les secrets et limiter les droits d'acces.
+- `prune: true` pour supprimer les ressources retirees de Git ;
+- `selfHeal: true` pour corriger les changements faits manuellement ;
+- `CreateNamespace=true` pour creer le namespace de destination.
+
+Une fois Argo CD en place, les changements de l'application doivent passer par Git. Il ne faut plus utiliser `kubectl apply -f k8s/` manuellement.
+
+## Secrets
+
+Les valeurs base64 des Secrets ne sont pas chiffrees. En production, il faut utiliser une solution comme Sealed Secrets, External Secrets Operator ou HashiCorp Vault.
